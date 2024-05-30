@@ -1,10 +1,11 @@
-console.log("Starting server via Bun!");
+import { chromium } from 'playwright';
 
-const server = Bun.serve({
-    port: 3002,
-    fetch(req) {
-        return new Response("Bun!")
-    },
-})
+(async () => {
+    console.log("Starting browser...")
+    const browser = await chromium.launch();
 
-console.log(`Listening on http://localhost:${server.port} ...`)
+    console.log("Creating context...")
+
+    await browser.close()
+    console.log("Browser closed.")
+})()
