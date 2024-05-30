@@ -12,9 +12,9 @@ const password = String(Bun.env.PSS);
   await page.getByLabel("Password").click();
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
-  const label = page.getByLabel("Side bar").getByText("Full Stack Developer ");
+  const label = await page.getByLabel("Side bar").getByText("Full Stack Developer ").textContent();
   console.log(label);
 
-  // await browser.close()
+  await browser.close()
   console.log("Browser closed.");
 })();
