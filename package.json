@@ -6,7 +6,9 @@
     "start": "bun run index.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@playwright/test": "^1.44.1",
+    "@types/bun": "latest",
+    "@types/node": "^20.12.13"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
