@@ -71,7 +71,7 @@ import { login } from "./utils/userUtils";
   await applyButton.focus();
   while(!(await remoteInput.isChecked())) {
     remoteCheckbox.click();
-    page.waitForTimeout(1000);
+    page.waitForTimeout(2000);
     console.log("reclicked remote checbox, is checked: ", await remoteInput.isChecked())
   }
   await applyButton.click();
@@ -100,15 +100,15 @@ import { login } from "./utils/userUtils";
   console.log("Job list: ", await jobList.count());
   const allJobs = await jobList.all();
   let prevDescription = "";
-  // for await (let job of allJobs) {
-  //   job.click();
-  //   await page.waitForTimeout(2000);
-  //   jobDescription = page.locator(".jobs-description__container");
-  //   const firstP = (await jobDescription.innerText()).trim().slice(0,60);
-  //   console.log("are descriptions the same?", firstP === prevDescription)
-  //   prevDescription = firstP;
-  //   console.log(firstP);
-  // }
+  for await (let job of allJobs) {
+    job.click();
+    await page.waitForTimeout(2000);
+    jobDescription = page.locator(".jobs-description__container");
+    const firstP = (await jobDescription.innerText()).trim().slice(0,60);
+    console.log("are descriptions the same?", firstP === prevDescription)
+    prevDescription = firstP;
+    console.log(firstP);
+  }
 
   // go to page 2
   await page.getByLabel("Page 2").click();
