@@ -50,45 +50,78 @@ import { login } from "./utils/userUtils";
   console.log("filled in search");
 
   // apply remote filter
-  let searchFiltersBar = page.locator(".search-filters-bar")
-  const remoteDropdown = searchFiltersBar.getByLabel("Remote filter.")
+  let searchFiltersBar = page.locator(".search-filters-bar");
+  const remoteDropdown = searchFiltersBar.getByLabel("Remote filter.");
   await remoteDropdown.click();
-  const remoteMenu = page.getByRole('group', { name: 'Filter results by: Remote' });
-  const remoteCheckbox = remoteMenu.getByText("Remote", {exact: true} )
-  await remoteCheckbox.click()
+  const remoteMenu = page.getByRole("group", {
+    name: "Filter results by: Remote",
+  });
+  const remoteInputContainer = remoteMenu.locator(".search-reusables__collection-values-item", { hasText: "Remote" })
+  console.log("remote input item: ", await remoteInputContainer.innerHTML())
+  const remoteInput = remoteInputContainer.locator("input");
+  console.log("remote input is checked: ", await remoteInput.isChecked())
+
+  const remoteCheckbox = remoteMenu.getByText("Remote", { exact: true });
+  console.log("remote checkbox: ", await remoteCheckbox.innerHTML())
+  await remoteCheckbox.click();
+  console.log("remote input is checked after click: ", await remoteInput.isChecked())
   await page.waitForTimeout(1000);
-  const applyButton = remoteMenu.locator('button', { hasText: 'Show'})
+  console.log("remote input is checked before push: ", await remoteInput.isChecked())
+  const applyButton = remoteMenu.locator("button", { hasText: "Show" });
+  await applyButton.focus();
+  while(!(await remoteInput.isChecked())) {
+    remoteCheckbox.click();
+    page.waitForTimeout(1000);
+    console.log("reclicked remote checbox, is checked: ", await remoteInput.isChecked())
+  }
   await applyButton.click();
 
   // apply date posted filter
-  searchFiltersBar = page.locator(".search-filters-bar")
-  const datePostedDropdown = searchFiltersBar.getByLabel("Date posted filter.")
+  searchFiltersBar = page.locator(".search-filters-bar");
+  const datePostedDropdown = searchFiltersBar.getByLabel("Date posted filter.");
   await datePostedDropdown.click();
-  const datePostedMenu = page.getByRole('group', { name: 'Filter results by: Date posted' });
-  const past24HoursRadioBtn = datePostedMenu.getByText("Past 24 hours", {exact: true} )
+  const datePostedMenu = page.getByRole("group", {
+    name: "Filter results by: Date posted",
+  });
+  const past24HoursRadioBtn = datePostedMenu.getByText("Past 24 hours", {
+    exact: true,
+  });
   await past24HoursRadioBtn.click();
   await page.waitForTimeout(200);
-  await datePostedMenu.getByRole('button', { name: 'Apply current filter to show' }).click();
-  
+  await datePostedMenu
+    .getByRole("button", { name: "Apply current filter to show" })
+    .click();
+
   // get job description
-  let jobDescription = page.locator('.jobs-description__container')
+  let jobDescription = page.locator(".jobs-description__container");
   // console.log("Job description: ", await jobDescription.innerHTML());
-  let jobListContainer = page.locator(".scaffold-layout__list-container")
-  let jobList = jobListContainer.locator('.jobs-search-results__list-item')
+  let jobListContainer = page.locator(".scaffold-layout__list-container");
+  let jobList = jobListContainer.locator(".jobs-search-results__list-item");
   console.log("Job list: ", await jobList.count());
+  const allJobs = await jobList.all();
+  let prevDescription = "";
+  // for await (let job of allJobs) {
+  //   job.click();
+  //   await page.waitForTimeout(2000);
+  //   jobDescription = page.locator(".jobs-description__container");
+  //   const firstP = (await jobDescription.innerText()).trim().slice(0,60);
+  //   console.log("are descriptions the same?", firstP === prevDescription)
+  //   prevDescription = firstP;
+  //   console.log(firstP);
+  // }
 
   // go to page 2
-  await page.getByLabel('Page 2').click();
+  await page.getByLabel("Page 2").click();
   await page.waitForTimeout(200);
 
   // get job description
-  jobDescription = page.locator('.jobs-description__container')
+  jobDescription = page.locator(".jobs-description__container");
   // console.log("Job description: ", await jobDescription.textContent());
-  jobListContainer = page.locator(".scaffold-layout__list-container")
-  jobList = jobListContainer.locator('.jobs-search-results__list-item')
+  jobListContainer = page.locator(".scaffold-layout__list-container");
+  jobList = jobListContainer.locator(".jobs-search-results__list-item");
   console.log("Job list: ", await jobList.count());
 
   // await browser.close();
   // console.log("Browser closed.");
-  console.log("Done.")
+  console.log("Done.");
 })();
