@@ -56,13 +56,14 @@ import { login } from "./utils/userUtils";
   const remoteMenu = page.getByRole('group', { name: 'Filter results by: Remote' });
   const remoteCheckbox = remoteMenu.getByText("Remote", {exact: true} )
   await remoteCheckbox.click()
-  await page.waitForTimeout(500);
-  await remoteMenu.getByRole('button', { name: 'Apply current filter to show' }).click();
+  await page.waitForTimeout(1000);
+  const applyButton = remoteMenu.locator('button', { hasText: 'Show'})
+  await applyButton.click();
 
   // apply date posted filter
   searchFiltersBar = page.locator(".search-filters-bar")
   const datePostedDropdown = searchFiltersBar.getByLabel("Date posted filter.")
-  datePostedDropdown.click();
+  await datePostedDropdown.click();
   const datePostedMenu = page.getByRole('group', { name: 'Filter results by: Date posted' });
   const past24HoursRadioBtn = datePostedMenu.getByText("Past 24 hours", {exact: true} )
   await past24HoursRadioBtn.click();
@@ -71,7 +72,10 @@ import { login } from "./utils/userUtils";
   
   // get job description
   let jobDescription = page.locator('.jobs-description__container')
-  console.log("Job description: ", await jobDescription.textContent());
+  // console.log("Job description: ", await jobDescription.innerHTML());
+  let jobListContainer = page.locator(".scaffold-layout__list-container")
+  let jobList = jobListContainer.locator('.jobs-search-results__list-item')
+  console.log("Job list: ", await jobList.count());
 
   // go to page 2
   await page.getByLabel('Page 2').click();
@@ -79,7 +83,10 @@ import { login } from "./utils/userUtils";
 
   // get job description
   jobDescription = page.locator('.jobs-description__container')
-  console.log("Job description: ", await jobDescription.textContent());
+  // console.log("Job description: ", await jobDescription.textContent());
+  jobListContainer = page.locator(".scaffold-layout__list-container")
+  jobList = jobListContainer.locator('.jobs-search-results__list-item')
+  console.log("Job list: ", await jobList.count());
 
   // await browser.close();
   // console.log("Browser closed.");
