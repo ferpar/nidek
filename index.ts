@@ -1,5 +1,10 @@
 import { chromium } from "playwright";
 import { login } from "./utils/userUtils";
+import {
+  filterByDatePosted,
+  filterByRemote,
+  searchJobs,
+} from "./utils/searchUtils";
 
 (async () => {
   //retrieve auth state
@@ -24,73 +29,19 @@ import { login } from "./utils/userUtils";
     console.log("Already logged in.");
   }
 
-  // retrieve data from the page
-  const label = await page
-    .getByLabel("Side bar")
-    .getByText("Full Stack Developer ")
-    .textContent();
-  console.log(label);
-
   // navigate to jobs page
   await page.getByRole("link", { name: "Jobs", exact: true }).click();
   console.log("clicked on jobs");
 
   // perform job search
-  const searchField = await page.getByRole("combobox", {
-    name: "Search by title, skill, or",
-  });
-  await searchField.click();
-  await searchField.fill("react");
-  const locationField = await page.getByRole("combobox", {
-    name: "City, state, or zip code",
-  });
-  await locationField.fill("european union");
-  await searchField.click();
-  await searchField.press("Enter");
+  searchJobs(page, "Full Stack Developer", "european union");
   console.log("filled in search");
 
   // apply remote filter
-  let searchFiltersBar = page.locator(".search-filters-bar");
-  const remoteDropdown = searchFiltersBar.getByLabel("Remote filter.");
-  await remoteDropdown.click();
-  const remoteMenu = page.getByRole("group", {
-    name: "Filter results by: Remote",
-  });
-  const remoteInputContainer = remoteMenu.locator(".search-reusables__collection-values-item", { hasText: "Remote" })
-  console.log("remote input item: ", await remoteInputContainer.innerHTML())
-  const remoteInput = remoteInputContainer.locator("input");
-  console.log("remote input is checked: ", await remoteInput.isChecked())
-
-  const remoteCheckbox = remoteMenu.getByText("Remote", { exact: true });
-  console.log("remote checkbox: ", await remoteCheckbox.innerHTML())
-  await remoteCheckbox.click();
-  console.log("remote input is checked after click: ", await remoteInput.isChecked())
-  await page.waitForTimeout(1000);
-  console.log("remote input is checked before push: ", await remoteInput.isChecked())
-  const applyButton = remoteMenu.locator("button", { hasText: "Show" });
-  await applyButton.focus();
-  while(!(await remoteInput.isChecked())) {
-    remoteCheckbox.click();
-    page.waitForTimeout(2000);
-    console.log("reclicked remote checbox, is checked: ", await remoteInput.isChecked())
-  }
-  await applyButton.click();
+  await filterByRemote(page);
 
   // apply date posted filter
-  searchFiltersBar = page.locator(".search-filters-bar");
-  const datePostedDropdown = searchFiltersBar.getByLabel("Date posted filter.");
-  await datePostedDropdown.click();
-  const datePostedMenu = page.getByRole("group", {
-    name: "Filter results by: Date posted",
-  });
-  const past24HoursRadioBtn = datePostedMenu.getByText("Past 24 hours", {
-    exact: true,
-  });
-  await past24HoursRadioBtn.click();
-  await page.waitForTimeout(200);
-  await datePostedMenu
-    .getByRole("button", { name: "Apply current filter to show" })
-    .click();
+  await filterByDatePosted(page, "Past 24 hours");
 
   // get job description
   let jobDescription = page.locator(".jobs-description__container");
@@ -100,28 +51,59 @@ import { login } from "./utils/userUtils";
   console.log("Job list: ", await jobList.count());
   const allJobs = await jobList.all();
   let prevDescription = "";
-  for await (let job of allJobs) {
-    job.click();
-    await page.waitForTimeout(2000);
+  const jobIds = await Promise.all(
+    allJobs.map((job) => job.getAttribute("data-occludable-job-id"))
+  );
+
+  for await (let jobId of jobIds) {
+    console.log(jobId);
+    const url = page.url();
+    // new url replacing currentJobId path param
+    const newUrl = url.replace(/(currentJobId=)(\d+)/, `$1${jobId}`);
+    page.goto(newUrl);
+
+    await page.waitForTimeout(4000);
     jobDescription = page.locator(".jobs-description__container");
-    const firstP = (await jobDescription.innerText()).trim().slice(0,60);
-    console.log("are descriptions the same?", firstP === prevDescription)
-    prevDescription = firstP;
+    const firstP = (await jobDescription.innerText())
+      .trim()
+      .slice(13, 150)
+      .trim();
     console.log(firstP);
+    console.log("are descriptions the same?", firstP === prevDescription);
+    // console.log(firstP)
+    prevDescription = firstP;
+    await page.waitForTimeout(1000);
   }
 
+  // for await (let job of allJobs) {
+  //   await job.click();
+  //   await page.waitForTimeout(1000);
+  //   jobDescription = page.locator(".jobs-description__container");
+  //   const firstP = (await jobDescription.innerText())
+  //     .trim()
+  //     .slice(13, 150)
+  //     .trim();
+  //   console.log("are descriptions the same?", firstP === prevDescription);
+  //   const url = page.url();
+  //   const jobId = url.split("?")[1].split("&")[0];
+  //   console.log("jobId: ", jobId);
+  //   // console.log(firstP)
+  //   prevDescription = firstP;
+  //   await page.waitForTimeout(1000);
+  // }
+
   // go to page 2
-  await page.getByLabel("Page 2").click();
-  await page.waitForTimeout(200);
+  // await page.getByLabel("Page 2").click();
+  // await page.waitForTimeout(200);
 
   // get job description
-  jobDescription = page.locator(".jobs-description__container");
+  // jobDescription = page.locator(".jobs-description__container");
   // console.log("Job description: ", await jobDescription.textContent());
-  jobListContainer = page.locator(".scaffold-layout__list-container");
-  jobList = jobListContainer.locator(".jobs-search-results__list-item");
-  console.log("Job list: ", await jobList.count());
+  // jobListContainer = page.locator(".scaffold-layout__list-container");
+  // jobList = jobListContainer.locator(".jobs-search-results__list-item");
+  // console.log("Job list: ", await jobList.count());
 
-  // await browser.close();
-  // console.log("Browser closed.");
+  await browser.close();
+  console.log("Browser closed.");
   console.log("Done.");
 })();
